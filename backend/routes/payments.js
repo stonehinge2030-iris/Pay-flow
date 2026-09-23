@@ -22,7 +22,7 @@ router.post('/add-funds/intent', requireAuth, async (req, res) => {
   try {
     const intent = await stripe.paymentIntents.create({
       amount: amountCents,
-      currency: 'euro',
+      currency: 'eur',
       customer: req.user.stripe_customer_id,
       automatic_payment_methods: { enabled: true },
       metadata: { userId: String(req.user.id), purpose: 'add_funds' },
@@ -107,7 +107,7 @@ router.post('/withdraw', requireAuth, async (req, res) => {
   try {
     const stripeTransfer = await stripe.transfers.create({
       amount: amountCents,
-      currency: 'euro',
+      currency: 'eur',
       destination: req.user.stripe_account_id,
       metadata: { userId: String(req.user.id), purpose: 'withdraw' },
     });
