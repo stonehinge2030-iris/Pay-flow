@@ -1,0 +1,347 @@
+/* Design tokens ------------------------------------------------------- */
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --ink: #1f2a24;
+  --ink-soft: #5b6660;
+  --line: #e3e1da;
+  --forest: #2f6f4e;
+  --forest-dark: #1f4d35;
+  --clay: #c97a3d;
+  --red: #b0453b;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input {
+  font-family: inherit;
+  font-size: 15px;
+}
+
+/* Layout ---------------------------------------------------------------- */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--line);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--forest-dark);
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.nav-link {
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink-soft);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.nav-link.active {
+  background: var(--forest);
+  color: #fff;
+}
+
+.nav-link:not(.active):hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.sign-out {
+  margin-top: auto;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 9px 12px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.main {
+  flex: 1;
+  padding: 40px 48px;
+  max-width: 720px;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  margin: 0 0 24px;
+}
+
+/* Auth screens ----------------------------------------------------------- */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+}
+
+.auth-card .wordmark {
+  display: block;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.auth-card h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0 0 4px;
+}
+
+.auth-sub {
+  color: var(--ink-soft);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.field label {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.field input {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.field input:focus {
+  outline: 2px solid var(--forest);
+  outline-offset: 1px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--forest);
+  color: #fff;
+  width: 100%;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.switch-link {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.error-banner {
+  background: #f8e9e7;
+  color: var(--red);
+  border: 1px solid #e6c3bf;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.success-banner {
+  background: #e8f1ec;
+  color: var(--forest-dark);
+  border: 1px solid #c7ddd0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+/* Dashboard ---------------------------------------------------------- */
+.balance-card {
+  background: var(--forest);
+  color: #fff;
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+
+.balance-label {
+  font-size: 13px;
+  opacity: 0.8;
+  margin: 0 0 6px;
+}
+
+.balance-amount {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 500;
+  margin: 0 0 20px;
+}
+
+.balance-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.balance-actions .btn {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.section-heading {
+  font-size: 13px;
+  text-transform: none;
+  color: var(--ink-soft);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+/* Transaction ledger rows ---------------------------------------------- */
+.ledger {
+  border-top: 1px solid var(--line);
+}
+
+.ledger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.ledger-title {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ledger-meta {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.ledger-amount {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.ledger-amount.positive { color: var(--forest-dark); }
+.ledger-amount.negative { color: var(--ink); }
+
+.empty-state {
+  color: var(--ink-soft);
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+/* Forms ---------------------------------------------------------------- */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 420px;
+}
+
+.card-element-wrap {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 14px;
+}
+
+.lookup-result {
+  font-size: 13px;
+  color: var(--forest-dark);
+  margin: -6px 0 14px;
+}
+
+.payout-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+.dot.ready { background: var(--forest); }
