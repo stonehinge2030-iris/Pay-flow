@@ -29,6 +29,10 @@ db.exec(`
     stripe_account_ready INTEGER NOT NULL DEFAULT 0,
     balance_cents INTEGER NOT NULL DEFAULT 0,
     currency TEXT NOT NULL DEFAULT 'eur',
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    verification_token TEXT,
+    reset_token TEXT,
+    reset_token_expires TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -56,6 +60,18 @@ db.exec(`
 const existingColumns = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
 if (!existingColumns.includes('currency')) {
   db.exec("ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT 'eur'");
+}
+if (!existingColumns.includes('email_verified')) {
+  db.exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0');
+}
+if (!existingColumns.includes('verification_token')) {
+  db.exec('ALTER TABLE users ADD COLUMN verification_token TEXT');
+}
+if (!existingColumns.includes('reset_token')) {
+  db.exec('ALTER TABLE users ADD COLUMN reset_token TEXT');
+}
+if (!existingColumns.includes('reset_token_expires')) {
+  db.exec('ALTER TABLE users ADD COLUMN reset_token_expires TEXT');
 }
 
 module.exports = db;

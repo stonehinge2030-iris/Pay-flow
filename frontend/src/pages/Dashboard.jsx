@@ -85,6 +85,17 @@ export default function Dashboard() {
   const [transactions, setTransactions] = useState([]);
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
+  const [resendState, setResendState] = useState('idle'); // idle | sending | sent
+
+  async function handleResend() {
+    setResendState('sending');
+    try {
+      await api.resendVerification(token);
+      setResendState('sent');
+    } catch {
+      setResendState('idle');
+    }
+  }
 
   async function loadTransactions() {
     const { transactions: rows } = await api.transactions(token);
@@ -101,6 +112,19 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="page-title">Home</h1>
+
+      {!user.emailVerified && (
+        <div className="verify-banner">
+          <span>Verify your email to keep your account secure.</span>
+          {resendState === 'sent' ? (
+            <span className="verify-sent">Email sent — check your inbox.</span>
+          ) : (
+            <button className="verify-resend" onClick={handleResend} disabled={resendState === 'sending'}>
+              {resendState === 'sending' ? 'Sending…' : 'Resend email'}
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="balance-card">
         <FlowLine className="balance-flow" />

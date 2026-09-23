@@ -3,6 +3,9 @@ import { useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Verify from './pages/Verify';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import SendMoney from './pages/SendMoney';
 import Activity from './pages/Activity';
@@ -34,6 +37,9 @@ export default function App() {
         path="/signup"
         element={!loading && user ? <Navigate to="/" replace /> : <Signup />}
       />
+      <Route path="/verify" element={<Verify />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
       <Route path="/send" element={<ProtectedLayout><SendMoney /></ProtectedLayout>} />
       <Route path="/activity" element={<ProtectedLayout><Activity /></ProtectedLayout>} />

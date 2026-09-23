@@ -290,6 +290,36 @@ input, select {
   margin-bottom: 14px;
 }
 
+.verify-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff3ec;
+  border: 1px solid #ffd9c4;
+  color: #9a4a24;
+  padding: 11px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+
+.verify-resend {
+  background: none;
+  border: none;
+  color: var(--current);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.verify-sent {
+  color: #9a4a24;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Dashboard ---------------------------------------------------------- */
 .balance-card {
   position: relative;

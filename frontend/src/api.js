@@ -20,6 +20,11 @@ async function request(path, { method = 'GET', body, token } = {}) {
 export const api = {
   signup: (body) => request('/auth/signup', { method: 'POST', body }),
   login: (body) => request('/auth/login', { method: 'POST', body }),
+  verifyEmail: (token) => request('/auth/verify-email', { method: 'POST', body: { token } }),
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: { email } }),
+  resetPassword: (token, password) =>
+    request('/auth/reset-password', { method: 'POST', body: { token, password } }),
+  resendVerification: (token) => request('/auth/resend-verification', { method: 'POST', token }),
   me: (token) => request('/users/me', { token }),
   lookup: (email, token) => request(`/users/lookup?email=${encodeURIComponent(email)}`, { token }),
   payoutOnboardingLink: (token) =>

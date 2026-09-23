@@ -63,6 +63,9 @@ export default function Login() {
           </button>
         </form>
         <p className="switch-link">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+        <p className="switch-link">
           New to PayFlow? <Link to="/signup">Create an account</Link>
         </p>
       </div>
