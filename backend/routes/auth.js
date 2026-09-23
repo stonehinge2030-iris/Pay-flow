@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const stripe = require('../stripe');
+const { SUPPORTED_CURRENCIES, isSupportedCurrency } = require('../currencies');
 
 const router = express.Router();
 
@@ -16,17 +17,23 @@ function publicUser(user) {
     name: user.name,
     email: user.email,
     balanceCents: user.balance_cents,
+    currency: user.currency,
     payoutReady: !!user.stripe_account_ready,
   };
 }
 
 router.post('/signup', async (req, res) => {
   const { name, email, password } = req.body || {};
+  const currency = String(req.body?.currency || 'eur').toLowerCase();
+
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email and password are all required.' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+  }
+  if (!isSupportedCurrency(currency)) {
+    return res.status(400).json({ error: `Currency must be one of: ${SUPPORTED_CURRENCIES.join(', ').toUpperCase()}` });
   }
 
   const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase());
@@ -42,10 +49,10 @@ router.post('/signup', async (req, res) => {
     const passwordHash = bcrypt.hashSync(password, 12);
     const info = db
       .prepare(
-        `INSERT INTO users (name, email, password_hash, stripe_customer_id)
-         VALUES (?, ?, ?, ?)`
+        `INSERT INTO users (name, email, password_hash, stripe_customer_id, currency)
+         VALUES (?, ?, ?, ?, ?)`
       )
-      .run(name, email.toLowerCase(), passwordHash, customer.id);
+      .run(name, email.toLowerCase(), passwordHash, customer.id, currency);
 
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
     res.status(201).json({ token: issueToken(user.id), user: publicUser(user) });

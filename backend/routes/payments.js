@@ -22,7 +22,7 @@ router.post('/add-funds/intent', requireAuth, async (req, res) => {
   try {
     const intent = await stripe.paymentIntents.create({
       amount: amountCents,
-      currency: 'eur',
+      currency: req.user.currency,
       customer: req.user.stripe_customer_id,
       automatic_payment_methods: { enabled: true },
       metadata: { userId: String(req.user.id), purpose: 'add_funds' },
@@ -53,6 +53,11 @@ router.post('/send', requireAuth, (req, res) => {
   if (!recipient) return res.status(404).json({ error: 'No PayFlow account with that email.' });
   if (recipient.id === req.user.id) {
     return res.status(400).json({ error: "You can't send money to yourself." });
+  }
+  if (recipient.currency !== req.user.currency) {
+    return res.status(400).json({
+      error: `${recipient.name}'s account uses ${recipient.currency.toUpperCase()}, but yours uses ${req.user.currency.toUpperCase()}. PayFlow can't convert between currencies yet.`,
+    });
   }
 
   const transfer = db.transaction(() => {
@@ -107,7 +112,7 @@ router.post('/withdraw', requireAuth, async (req, res) => {
   try {
     const stripeTransfer = await stripe.transfers.create({
       amount: amountCents,
-      currency: 'eur',
+      currency: req.user.currency,
       destination: req.user.stripe_account_id,
       metadata: { userId: String(req.user.id), purpose: 'withdraw' },
     });

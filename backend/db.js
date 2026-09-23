@@ -28,6 +28,7 @@ db.exec(`
     stripe_account_id TEXT,
     stripe_account_ready INTEGER NOT NULL DEFAULT 0,
     balance_cents INTEGER NOT NULL DEFAULT 0,
+    currency TEXT NOT NULL DEFAULT 'eur',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 
@@ -48,5 +49,13 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
 `);
+
+// Safe migration: CREATE TABLE IF NOT EXISTS above only helps brand-new
+// databases. If this file already existed from before the currency column
+// was added, add it now without losing any existing data.
+const existingColumns = db.prepare("PRAGMA table_info(users)").all().map((c) => c.name);
+if (!existingColumns.includes('currency')) {
+  db.exec("ALTER TABLE users ADD COLUMN currency TEXT NOT NULL DEFAULT 'eur'");
+}
 
 module.exports = db;

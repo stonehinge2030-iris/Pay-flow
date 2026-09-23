@@ -16,7 +16,7 @@ router.get('/lookup', requireAuth, (req, res) => {
   const email = String(req.query.email || '').toLowerCase().trim();
   if (!email) return res.status(400).json({ error: 'Provide an email to look up.' });
 
-  const user = db.prepare('SELECT id, name, email FROM users WHERE email = ?').get(email);
+  const user = db.prepare('SELECT id, name, email, currency FROM users WHERE email = ?').get(email);
   if (!user) return res.status(404).json({ error: 'No PayFlow account with that email.' });
   if (user.id === req.user.id) {
     return res.status(400).json({ error: "That's your own account." });
