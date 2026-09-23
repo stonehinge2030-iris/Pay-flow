@@ -5,13 +5,15 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import TransactionRow, { formatCents } from '../components/TransactionRow';
+import { PlusIcon, SendIcon, BankIcon } from '../components/Icons';
+import FlowLine from '../components/FlowLine';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '');
 
 function AddFundsForm({ onDone }) {
   const stripe = useStripe();
   const elements = useElements();
-  const { token, refreshUser } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const [amount, setAmount] = useState('20');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('idle'); // idle | processing | success
@@ -21,7 +23,7 @@ function AddFundsForm({ onDone }) {
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
     if (!amountCents || amountCents < 100) {
-      setError('Enter an amount of at least $1.');
+      setError('Enter an amount of at least 1.');
       return;
     }
     if (!stripe || !elements) return;
@@ -58,7 +60,7 @@ function AddFundsForm({ onDone }) {
     <form onSubmit={handleSubmit} className="form-card">
       {error && <div className="error-banner">{error}</div>}
       <div className="field">
-        <label htmlFor="amount">Amount (USD)</label>
+        <label htmlFor="amount">Amount ({user.currency.toUpperCase()})</label>
         <input
           id="amount"
           type="number"
@@ -72,7 +74,7 @@ function AddFundsForm({ onDone }) {
         <CardElement options={{ style: { base: { fontSize: '15px' } } }} />
       </div>
       <button className="btn btn-primary" disabled={!stripe || status === 'processing'}>
-        {status === 'processing' ? 'Processing…' : `Add ${amount ? `$${amount}` : 'funds'}`}
+        {status === 'processing' ? 'Processing…' : 'Add funds'}
       </button>
     </form>
   );
@@ -101,15 +103,18 @@ export default function Dashboard() {
       <h1 className="page-title">Home</h1>
 
       <div className="balance-card">
+        <FlowLine className="balance-flow" />
         <p className="balance-label">Your balance</p>
-        <p className="balance-amount">{formatCents(user.balanceCents)}</p>
+        <p className="balance-amount">{formatCents(user.balanceCents, user.currency)}</p>
         <div className="balance-actions">
           <button className="btn" onClick={() => { setShowAddFunds((v) => !v); setShowWithdraw(false); }}>
-            Add funds
+            <PlusIcon width={15} height={15} /> Add funds
           </button>
-          <Link className="btn" to="/send">Send</Link>
+          <Link className="btn" to="/send">
+            <SendIcon width={15} height={15} /> Send
+          </Link>
           <button className="btn" onClick={() => { setShowWithdraw((v) => !v); setShowAddFunds(false); }}>
-            Withdraw
+            <BankIcon width={15} height={15} /> Withdraw
           </button>
         </div>
       </div>
@@ -129,9 +134,11 @@ export default function Dashboard() {
 
       <p className="section-heading" style={{ marginTop: 28 }}>Recent activity</p>
       <div className="ledger">
-        {transactions.length === 0 && <p className="empty-state">Nothing here yet.</p>}
+        {transactions.length === 0 && (
+          <p className="empty-state">Add funds or send your first payment to get started.</p>
+        )}
         {transactions.map((tx) => (
-          <TransactionRow key={tx.id} tx={tx} currentUserId={user.id} />
+          <TransactionRow key={tx.id} tx={tx} currentUserId={user.id} currency={user.currency} />
         ))}
       </div>
       {transactions.length > 0 && (
@@ -165,7 +172,7 @@ function WithdrawForm({ onDone }) {
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
     if (!amountCents || amountCents < 100) {
-      setError('Enter an amount of at least $1.');
+      setError('Enter an amount of at least 1.');
       return;
     }
     setLoading(true);
@@ -184,7 +191,7 @@ function WithdrawForm({ onDone }) {
     <form onSubmit={handleSubmit} className="form-card">
       {error && <div className="error-banner">{error}</div>}
       <div className="field">
-        <label htmlFor="withdrawAmount">Amount (USD)</label>
+        <label htmlFor="withdrawAmount">Amount ({user.currency.toUpperCase()})</label>
         <input
           id="withdrawAmount"
           type="number"

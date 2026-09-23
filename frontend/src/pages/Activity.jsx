@@ -15,9 +15,11 @@ export default function Activity() {
     <div>
       <h1 className="page-title">Activity</h1>
       <div className="ledger">
-        {transactions.length === 0 && <p className="empty-state">Nothing here yet.</p>}
+        {transactions.length === 0 && (
+          <p className="empty-state">No activity yet — it'll show up here once you add funds or send a payment.</p>
+        )}
         {transactions.map((tx) => (
-          <TransactionRow key={tx.id} tx={tx} currentUserId={user.id} />
+          <TransactionRow key={tx.id} tx={tx} currentUserId={user.id} currency={user.currency} />
         ))}
       </div>
     </div>

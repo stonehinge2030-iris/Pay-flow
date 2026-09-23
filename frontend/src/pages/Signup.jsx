@@ -2,11 +2,21 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import FlowLine from '../components/FlowLine';
+
+const CURRENCIES = [
+  { code: 'eur', label: 'EUR — Euro' },
+  { code: 'usd', label: 'USD — US Dollar' },
+  { code: 'gbp', label: 'GBP — British Pound' },
+  { code: 'cad', label: 'CAD — Canadian Dollar' },
+  { code: 'aud', label: 'AUD — Australian Dollar' },
+];
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [currency, setCurrency] = useState('eur');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -17,7 +27,7 @@ export default function Signup() {
     setError('');
     setLoading(true);
     try {
-      const { token, user } = await api.signup({ name, email, password });
+      const { token, user } = await api.signup({ name, email, password, currency });
       login(token, user);
       navigate('/');
     } catch (err) {
@@ -30,7 +40,10 @@ export default function Signup() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <span className="wordmark">PayFlow</span>
+        <div className="auth-brand">
+          <span className="wordmark">PayFlow</span>
+          <FlowLine className="auth-flow" />
+        </div>
         <h1>Create your account</h1>
         <p className="auth-sub">Send and receive money in seconds.</p>
         {error && <div className="error-banner">{error}</div>}
@@ -59,6 +72,17 @@ export default function Signup() {
               minLength={8}
               required
             />
+          </div>
+          <div className="field">
+            <label htmlFor="currency">Currency</label>
+            <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {CURRENCIES.map((c) => (
+                <option key={c.code} value={c.code}>{c.label}</option>
+              ))}
+            </select>
+            <span className="field-hint">
+              Money you send and receive stays in this currency. Choose the one your bank account uses.
+            </span>
           </div>
           <button className="btn btn-primary" disabled={loading}>
             {loading ? 'Creating account…' : 'Create account'}

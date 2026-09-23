@@ -4,7 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 
 export default function SendMoney() {
-  const { token, refreshUser } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
@@ -30,7 +30,7 @@ export default function SendMoney() {
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
     if (!amountCents || amountCents < 100) {
-      setError('Enter an amount of at least $1.');
+      setError('Enter an amount of at least 1.');
       return;
     }
     setLoading(true);
@@ -61,10 +61,18 @@ export default function SendMoney() {
             required
           />
         </div>
-        {recipient && <p className="lookup-result">Sending to {recipient.name}</p>}
+        {recipient && recipient.currency === user.currency && (
+          <p className="lookup-result">Sending to {recipient.name}</p>
+        )}
+        {recipient && recipient.currency !== user.currency && (
+          <p className="lookup-result lookup-warning">
+            {recipient.name}'s account uses {recipient.currency.toUpperCase()}, but yours uses{' '}
+            {user.currency.toUpperCase()}. PayFlow can't convert currencies yet, so this transfer won't go through.
+          </p>
+        )}
 
         <div className="field">
-          <label htmlFor="sendAmount">Amount (USD)</label>
+          <label htmlFor="sendAmount">Amount ({user.currency.toUpperCase()})</label>
           <input
             id="sendAmount"
             type="number"

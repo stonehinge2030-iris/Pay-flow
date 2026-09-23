@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { HomeIcon, SendIcon, ListIcon, BankIcon } from './Icons';
 
 export default function Navbar() {
   const { logout, user } = useAuth();
@@ -9,16 +10,16 @@ export default function Navbar() {
       <span className="wordmark">PayFlow</span>
       <div className="nav-links">
         <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          Home
+          <HomeIcon width={16} height={16} /> Home
         </NavLink>
         <NavLink to="/send" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          Send money
+          <SendIcon width={16} height={16} /> Send money
         </NavLink>
         <NavLink to="/activity" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          Activity
+          <ListIcon width={16} height={16} /> Activity
         </NavLink>
         <NavLink to="/onboarding" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-          Bank account
+          <BankIcon width={16} height={16} /> Bank account
         </NavLink>
       </div>
       {user && (

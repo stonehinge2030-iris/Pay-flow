@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import FlowLine from '../components/FlowLine';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -29,7 +30,10 @@ export default function Login() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <span className="wordmark">PayFlow</span>
+        <div className="auth-brand">
+          <span className="wordmark">PayFlow</span>
+          <FlowLine className="auth-flow" />
+        </div>
         <h1>Welcome back</h1>
         <p className="auth-sub">Log in to your account.</p>
         {error && <div className="error-banner">{error}</div>}
