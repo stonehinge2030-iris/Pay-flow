@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
-import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -13,10 +13,10 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 
 function AddFundsForm({ onDone }) {
   const stripe = useStripe();
   const elements = useElements();
-  const { token, user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [amount, setAmount] = useState('20');
   const [error, setError] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | processing | success
+  const [status, setStatus] = useState('idle'); // idle | processing
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -29,31 +29,25 @@ function AddFundsForm({ onDone }) {
     if (!stripe || !elements) return;
 
     setStatus('processing');
-    try {
-      const { clientSecret } = await api.addFundsIntent(amountCents, token);
-      const result = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card: elements.getElement(CardElement) },
-      });
-      if (result.error) {
-        setError(result.error.message);
-        setStatus('idle');
-        return;
-      }
-      // The balance itself is credited by our backend via Stripe's webhook,
-      // not by this client-side confirmation — give it a moment to land.
-      setStatus('success');
-      setTimeout(async () => {
-        await refreshUser();
-        onDone();
-      }, 1200);
-    } catch (err) {
-      setError(err.message);
-      setStatus('idle');
-    }
-  }
+    // Some payment methods (PayPal, Revolut Pay, Wero) redirect off-site to
+    // confirm, then send the browser back here — so unlike a card-only
+    // flow, we can't just check the result in this function. Dashboard's
+    // useEffect (below) picks the flow back up on return, using the
+    // payment_intent_client_secret Stripe appends to the return URL.
+    const result = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/?add_funds=complete`,
+      },
+    });
 
-  if (status === 'success') {
-    return <div className="success-banner">Payment confirmed — updating your balance…</div>;
+    // Only reachable for payment methods that DON'T redirect (e.g. cards
+    // can complete without leaving the page) — a failure here.
+    if (result.error) {
+      setError(result.error.message);
+      setStatus('idle');
+      return;
+    }
   }
 
   return (
@@ -71,7 +65,7 @@ function AddFundsForm({ onDone }) {
         />
       </div>
       <div className="card-element-wrap">
-        <CardElement options={{ style: { base: { fontSize: '15px' } } }} />
+        <PaymentElement />
       </div>
       <button className="btn btn-primary" disabled={!stripe || status === 'processing'}>
         {status === 'processing' ? 'Processing…' : 'Add funds'}
@@ -80,12 +74,66 @@ function AddFundsForm({ onDone }) {
   );
 }
 
+// Wraps AddFundsForm in Elements once we know the amount, since the
+// PaymentElement needs a clientSecret (and therefore an amount) up front —
+// unlike the old CardElement, which didn't care about the amount until
+// submit time.
+function AddFundsFlow({ onDone }) {
+  const { token } = useAuth();
+  const [amount, setAmount] = useState('20');
+  const [clientSecret, setClientSecret] = useState(null);
+  const [error, setError] = useState('');
+
+  async function startIntent(e) {
+    e.preventDefault();
+    setError('');
+    const amountCents = Math.round(parseFloat(amount) * 100);
+    if (!amountCents || amountCents < 100) {
+      setError('Enter an amount of at least 1.');
+      return;
+    }
+    try {
+      const { clientSecret } = await api.addFundsIntent(amountCents, token);
+      setClientSecret(clientSecret);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  if (clientSecret) {
+    return (
+      <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <AddFundsForm onDone={onDone} />
+      </Elements>
+    );
+  }
+
+  return (
+    <form onSubmit={startIntent} className="form-card">
+      {error && <div className="error-banner">{error}</div>}
+      <div className="field">
+        <label htmlFor="startAmount">Amount</label>
+        <input
+          id="startAmount"
+          type="number"
+          min="1"
+          step="0.01"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+      </div>
+      <button className="btn btn-primary">Continue</button>
+    </form>
+  );
+}
+
 export default function Dashboard() {
-  const { user, token } = useAuth();
+  const { user, token, refreshUser } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [showAddFunds, setShowAddFunds] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [resendState, setResendState] = useState('idle'); // idle | sending | sent
+  const [returnBanner, setReturnBanner] = useState(null); // null | 'success' | 'processing' | 'failed'
 
   async function handleResend() {
     setResendState('sending');
@@ -104,6 +152,30 @@ export default function Dashboard() {
 
   useEffect(() => {
     loadTransactions();
+
+    // Coming back from a redirect-based payment method (PayPal, Revolut
+    // Pay, Wero)? Stripe appends these params to the return_url above.
+    const params = new URLSearchParams(window.location.search);
+    const clientSecret = params.get('payment_intent_client_secret');
+    if (params.get('add_funds') === 'complete' && clientSecret) {
+      loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
+        .then((stripe) => stripe.retrievePaymentIntent(clientSecret))
+        .then(({ paymentIntent }) => {
+          if (paymentIntent?.status === 'succeeded' || paymentIntent?.status === 'processing') {
+            setReturnBanner(paymentIntent.status === 'succeeded' ? 'success' : 'processing');
+            // The balance itself is credited by our backend via Stripe's
+            // webhook, not by this client-side check — give it a moment.
+            setTimeout(async () => {
+              await refreshUser();
+              loadTransactions();
+            }, 1500);
+          } else {
+            setReturnBanner('failed');
+          }
+        });
+      // Clean the URL so refreshing the page doesn't re-trigger this.
+      window.history.replaceState({}, '', window.location.pathname);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -112,6 +184,16 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="page-title">Home</h1>
+
+      {returnBanner === 'success' && (
+        <div className="success-banner">Payment confirmed — updating your balance…</div>
+      )}
+      {returnBanner === 'processing' && (
+        <div className="success-banner">Your payment is processing — your balance will update shortly.</div>
+      )}
+      {returnBanner === 'failed' && (
+        <div className="error-banner">That payment didn't go through. You can try again below.</div>
+      )}
 
       {!user.emailVerified && (
         <div className="verify-banner">
@@ -144,14 +226,12 @@ export default function Dashboard() {
       </div>
 
       {showAddFunds && (
-        <Elements stripe={stripePromise}>
-          <AddFundsForm
-            onDone={() => {
-              setShowAddFunds(false);
-              loadTransactions();
-            }}
-          />
-        </Elements>
+        <AddFundsFlow
+          onDone={() => {
+            setShowAddFunds(false);
+            loadTransactions();
+          }}
+        />
       )}
 
       {showWithdraw && <WithdrawForm onDone={() => { setShowWithdraw(false); loadTransactions(); }} />}
